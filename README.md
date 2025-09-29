@@ -8,28 +8,34 @@
 
 ## Executive Summary
 En este laboratorio se analizó la configuración actual de **GRUB2**, el gestor de arranque más común en Linux.  
-Se realizaron cambios en el archivo de configuración principal, como aumentar el tiempo de espera del menú de arranque de 5 a 30 segundos y forzar la visualización del menú. Posteriormente se regeneró la configuración y se verificó que el sistema continuara arrancando de manera normal.  
-Además, se investigaron procedimientos de recuperación ante fallos del gestor de arranque.  
-
-Los resultados mostraron que las modificaciones se aplicaron correctamente y el sistema pudo reiniciar sin inconvenientes, reforzando la comprensión de la estructura y funcionamiento de GRUB2.  
+Se realizaron cambios controlados en el archivo principal de configuración (`/etc/default/grub`), entre ellos aumentar el tiempo de espera del menú de arranque de **5** a **30** segundos y forzar la visualización del menú. Se regeneró la configuración con `update-grub` y se verificó que el sistema arranca correctamente.  
+Además, se documentaron métodos de recuperación (GRUB Rescue Mode, recuperación desde Live USB y restauración desde backups). Los cambios fueron revertibles gracias a los respaldos y snapshots previos.
 
 ---
 
 ## Objectives Completed
 - Analizar la estructura y funcionalidad del bootloader GRUB2.  
-- Modificar configuraciones de GRUB de manera segura en una VM.  
-- Implementar cambios en el comportamiento del menú de arranque.  
-- Investigar y documentar procedimientos de recuperación de GRUB.  
-- Aplicar buenas prácticas de seguridad en configuraciones críticas.  
+- Modificar configuraciones de GRUB de forma segura en una VM.  
+- Cambiar el comportamiento del menú de arranque (timeout y estilo).  
+- Investigar y documentar procedimientos de recuperación ante fallos.  
+- Aplicar buenas prácticas de seguridad (respaldos, snapshots).
 
 ---
 
 ## Main Changes Implemented
-1. **Respaldos creados**  
-   - `/etc/default/grub.backup`  
-   - `/boot/grub/grub.cfg.backup`  
 
-2. **Modificaciones en `/etc/default/grub`:**
+1. **Respaldos y snapshot**
+   - Snapshot de la VM: *Before GRUB Lab* (VirtualBox → Machine → Take Snapshot).  
+   - Copias de seguridad de archivos críticos:
+     ```bash
+     sudo cp /etc/default/grub /etc/default/grub.backup
+     sudo cp /boot/grub/grub.cfg /boot/grub/grub.cfg.backup
+     ls -la /etc/default/grub*
+     ls -la /boot/grub/grub.cfg*
+     ```
+
+2. **Modificaciones en `/etc/default/grub`**  
+   Se editaron las siguientes líneas (ejemplo completo):
    ```bash
    GRUB_DEFAULT=0
    GRUB_TIMEOUT=30
@@ -37,30 +43,85 @@ Los resultados mostraron que las modificaciones se aplicaron correctamente y el 
    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
    GRUB_CMDLINE_LINUX=""
    GRUB_TIMEOUT_STYLE=menu
+   ```
+   > Nota: editar solo `/etc/default/grub`. No editar manualmente `/boot/grub/grub.cfg`.
 
-3. **Aplicación de cambios:**
-```sudo update-grub ``` 
+3. **Aplicación de cambios**
+   ```bash
+   sudo update-grub
+   ```
+   - Verificar salida de `update-grub` para asegurarse de que no haya errores.  
+   - En caso de error, restaurar backup:
+     ```bash
+     sudo cp /etc/default/grub.backup /etc/default/grub
+     sudo update-grub
+     ```
 
-4. **Resultados verificados:**
-Timeout cambiado a 30 segundos.
-Menú de GRUB mostrado correctamente.
-El sistema arrancó sin errores.
+4. **Verificación en arranque**
+   - Reiniciar la VM y comprobar:
+     - El menú de GRUB aparece y el timeout es de 30 segundos.
+     - Número de entradas del menú acorde a lo esperado.
+     - El sistema arranca normalmente a la entrada por defecto.
+
+---
+
+## Results Verified
+- `GRUB_TIMEOUT` cambiado de **5** a **30** segundos.  
+- `GRUB_TIMEOUT_STYLE=menu` fuerza la visualización del menú.  
+- `GRUB_DEFAULT=0` arranca la primera entrada por defecto.  
+- `update-grub` ejecutado sin errores (salida verificada).  
+- El sistema reinició y arrancó correctamente tras los cambios.
+
+---
 
 ## Key Learnings
+- Siempre crear **snapshots** y **backups** antes de tocar configuraciones críticas.  
+- `/etc/default/grub` es el archivo de configuración editable; `grub.cfg` es generado.  
+- `GRUB_TIMEOUT` y `GRUB_TIMEOUT_STYLE` controlan la interacción del usuario con el menú.  
+- Conocer GRUB Rescue Mode y el procedimiento de chroot desde un Live USB es esencial para recuperación.  
+- Mantener procedimientos claros de restauración garantiza poder revertir cambios rápidamente.
 
-La importancia de crear respaldos y snapshots antes de modificar configuraciones críticas.
-El archivo que se debe editar es /etc/default/grub y los cambios se aplican regenerando grub.cfg con update-grub.
-El parámetro GRUB_TIMEOUT controla la interacción del usuario con el menú de arranque.
-Los procedimientos de recuperación (Rescue Mode, Live USB, restauración de backups) son fundamentales para asegurar la continuidad del sistema.
-Seguir buenas prácticas en configuraciones críticas es clave para evitar dejar inestable un sistema operativo.
+---
 
 ## Evidence Files
+- `pre-lab-analysis.md` — Análisis inicial del estado de GRUB y parámetros observados.  
+- `configuration-changes.md` — Registro detallado de las modificaciones aplicadas.  
+- `grub-recovery-guide.md` — Guía de recuperación (Rescue Mode, Live USB, chroot, reinstalación).  
+- `lessons-learned.md` — Reflexiones y aprendizajes clave.  
+- **Screenshots:**  
+  - `grub_menu_before.png` — Menú de GRUB antes de los cambios.  
+  - `grub_menu_after.png` — Menú de GRUB después de las modificaciones.
+
+---
+
+## Appendix — Comandos útiles (resumen)
+```bash
+# Ver configuración actual
+sudo cat /etc/default/grub
+sudo less /boot/grub/grub.cfg
+
+# Comprobar versión de GRUB
+grub-install --version
+
+# Respaldos
+sudo cp /etc/default/grub /etc/default/grub.backup
+sudo cp /boot/grub/grub.cfg /boot/grub/grub.cfg.backup
+
+# Editar archivo
+sudo nano /etc/default/grub
+
+# Regenerar configuración
+sudo update-grub
+
+# Restaurar backup (si es necesario)
+sudo cp /etc/default/grub.backup /etc/default/grub
+sudo update-grub
 ```
-pre-lab-analysis.md → análisis inicial de parámetros GRUB.
-configuration-changes.md → registro de modificaciones aplicadas.
-grub-recovery-guide.md → documentación de métodos de recuperación.
-lessons-learned.md → reflexiones y aprendizajes clave.
-```
-## Screenshots:
-Menú de GRUB antes de los cambios.
-Menú de GRUB después de aplicar modificaciones.
+
+---
+
+## Screenshots (pendientes de adjuntar)
+- `grub_menu_before.png` — captura del menú antes de la modificación (timeout = 5s).  
+- `grub_menu_after.png` — captura del menú tras la modificación (timeout = 30s).
+
+---
