@@ -37,3 +37,30 @@ Los resultados mostraron que las modificaciones se aplicaron correctamente y el 
    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
    GRUB_CMDLINE_LINUX=""
    GRUB_TIMEOUT_STYLE=menu
+
+3. **Aplicación de cambios:**
+```sudo update-grub ``` 
+
+4. **Resultados verificados:**
+Timeout cambiado a 30 segundos.
+Menú de GRUB mostrado correctamente.
+El sistema arrancó sin errores.
+
+## Key Learnings
+
+La importancia de crear respaldos y snapshots antes de modificar configuraciones críticas.
+El archivo que se debe editar es /etc/default/grub y los cambios se aplican regenerando grub.cfg con update-grub.
+El parámetro GRUB_TIMEOUT controla la interacción del usuario con el menú de arranque.
+Los procedimientos de recuperación (Rescue Mode, Live USB, restauración de backups) son fundamentales para asegurar la continuidad del sistema.
+Seguir buenas prácticas en configuraciones críticas es clave para evitar dejar inestable un sistema operativo.
+
+## Evidence Files
+```
+pre-lab-analysis.md → análisis inicial de parámetros GRUB.
+configuration-changes.md → registro de modificaciones aplicadas.
+grub-recovery-guide.md → documentación de métodos de recuperación.
+lessons-learned.md → reflexiones y aprendizajes clave.
+```
+## Screenshots:
+Menú de GRUB antes de los cambios.
+Menú de GRUB después de aplicar modificaciones.
